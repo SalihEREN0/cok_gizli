@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Dino Runner Game</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			min-height: 100vh;
+			background: #f7f7f7;
+			font-family: 'Courier New', monospace;
+			overflow: hidden;
+		}
+
+		.game-container {
+			text-align: center;
+		}
+
+		canvas {
+			border: 2px solid #535353;
+			background: #fff;
+			display: block;
+			margin: 20px auto;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		}
+
+		.score {
+			font-size: 24px;
+			color: #535353;
+			margin-bottom: 10px;
+		}
+
+		.instructions {
+			color: #757575;
+			margin-top: 10px;
+		}
+
+		.game-over {
+			font-size: 32px;
+			color: #d32f2f;
+			margin: 20px 0;
+			display: none;
+		}
+
+		/* Gizli subdomain linki - sadece inspect ile görünür */
+		.hidden-link {
+			display: none;
+			opacity: 0;
+			position: absolute;
+			left: -9999px;
+		}
+	</style>
+</head>
+
+<body>
+	<!-- Gizli subdomain linki -->
+	<a href="https://secret.yoursite.com" class="hidden-link" data-secret="true">Secret Area</a>
+
+	<div class="game-container">
+		<div class="score">Skor: <span id="score">0</span></div>
+		<canvas id="gameCanvas" width="800" height="200"></canvas>
+		<div class="game-over" id="gameOver">OYUN BİTTİ! Yeniden başlamak için SPACE'e bas</div>
+		<div class="instructions">SPACE veya ↑ tuşu ile zıpla</div>
+	</div>
+
+	<script>
+		// Gizli konsol mesajı
+		console.log('%c🔍 Gizli Link Bulundu!', 'color: #00ff00; font-size: 20px; font-weight: bold;');
+		console.log('%chttps://secret.yoursite.com', 'color: #00bfff; font-size: 16px;');
+		console.log('%cInspect menüsünde "hidden-link" class\'ını ara!', 'color: #ffa500; font-size: 14px;');
+
+		const canvas = document.getElementById('gameCanvas');
+		const ctx = canvas.getContext('2d');
+		const scoreElement = document.getElementById('score');
+		const gameOverElement = document.getElementById('gameOver');
+
+		let gameRunning = false;
+		let score = 0;
+		let gameSpeed = 5;
+		let gravity = 0.6;
+
+		// Dino objesi
+		const dino = {
+			x: 50,
+			y: 150,
+			width: 40,
+			height: 50,
+			dy: 0,
+			jumpPower: -12,
+			grounded: true,
+
+			draw() {
+				// Basit dino çizimi
+				ctx.fillStyle = '#535353';
+				ctx.fillRect(this.x, this.y, this.width, this.height);
+
+				// Göz
+				ctx.fillStyle = '#fff';
+				ctx.fillRect(this.x + 25, this.y + 10, 8, 8);
+
+				// Bacaklar
+				ctx.fillStyle = '#535353';
+				if (Math.floor(score / 5) % 2 === 0) {
+					ctx.fillRect(this.x + 5, this.y + 50, 10, 15);
+					ctx.fillRect(this.x + 25, this.y + 50, 10, 15);
+				} else {
+					ctx.fillRect(this.x + 10, this.y + 50, 10, 15);
+					ctx.fillRect(this.x + 20, this.y + 50, 10, 15);
+				}
+			},
+
+			update() {
+				if (!this.grounded) {
+					this.dy += gravity;
+					this.y += this.dy;
+				}
+
+				if (this.y >= 150) {
+					this.y = 150;
+					this.grounded = true;
+					this.dy = 0;
+				}
+			},
+
+			jump() {
+				if (this.grounded) {
+					this.dy = this.jumpPower;
+					this.grounded = false;
+				}
+			}
+		};
+
+		// Engellar
+		const obstacles = [];
+
+		class Obstacle {
+			constructor() {
+				this.x = canvas.width;
+				this.y = 150;
+				this.width = 20;
+				this.height = 40 + Math.random() * 20;
+			}
+
+			draw() {
+				ctx.fillStyle = '#535353';
+				ctx.fillRect(this.x, this.y + 50 - this.height, this.width, this.height);
+			}
+
+			update() {
+				this.x -= gameSpeed;
+			}
+		}
+
+		// Zemin çizgisi
+		function drawGround() {
+			ctx.strokeStyle = '#535353';
+			ctx.lineWidth = 2;
+			ctx.beginPath();
+			ctx.moveTo(0, 200);
+			ctx.lineTo(canvas.width, 200);
+			ctx.stroke();
+		}
+
+		// Yeni engel oluştur
+		let obstacleTimer = 0;
+		function spawnObstacle() {
+			obstacleTimer++;
+			if (obstacleTimer > 90) {
+				obstacles.push(new Obstacle());
+				obstacleTimer = 0;
+			}
+		}
+
+		// Çarpışma kontrolü
+		function checkCollision() {
+			for (let obstacle of obstacles) {
+				if (dino.x < obstacle.x + obstacle.width &&
+					dino.x + dino.width > obstacle.x &&
+					dino.y < obstacle.y + 50 &&
+					dino.y + dino.height > obstacle.y + 50 - obstacle.height) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		// Oyun döngüsü
+		function gameLoop() {
+			if (!gameRunning) return;
+
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			drawGround();
+			dino.update();
+			dino.draw();
+
+			spawnObstacle();
+
+			for (let i = obstacles.length - 1; i >= 0; i--) {
+				obstacles[i].update();
+				obstacles[i].draw();
+
+				if (obstacles[i].x + obstacles[i].width < 0) {
+					obstacles.splice(i, 1);
+					score++;
+					scoreElement.textContent = score;
+
+					// Her 10 puanda hız artır
+					if (score % 10 === 0) {
+						gameSpeed += 0.5;
+					}
+				}
+			}
+
+			if (checkCollision()) {
+				gameOver();
+				return;
+			}
+
+			requestAnimationFrame(gameLoop);
+		}
+
+		// Oyunu başlat
+		function startGame() {
+			gameRunning = true;
+			score = 0;
+			gameSpeed = 5;
+			obstacles.length = 0;
+			obstacleTimer = 0;
+			dino.y = 150;
+			dino.dy = 0;
+			dino.grounded = true;
+			scoreElement.textContent = score;
+			gameOverElement.style.display = 'none';
+			gameLoop();
+		}
+
+		// Oyun bitti
+		function gameOver() {
+			gameRunning = false;
+			gameOverElement.style.display = 'block';
+		}
+
+		// Kontroller
+		document.addEventListener('keydown', (e) => {
+			if (e.code === 'Space' || e.code === 'ArrowUp') {
+				e.preventDefault();
+				if (gameRunning) {
+					dino.jump();
+				} else {
+					startGame();
+				}
+			}
+		});
+
+		// Mobil dokunma kontrolü
+		canvas.addEventListener('touchstart', (e) => {
+			e.preventDefault();
+			if (gameRunning) {
+				dino.jump();
+			} else {
+				startGame();
+			}
+		});
+
+		// İlk ekran
+		ctx.fillStyle = '#535353';
+		ctx.font = '24px Courier New';
+		ctx.textAlign = 'center';
+		ctx.fillText('SPACE ile başla', canvas.width / 2, canvas.height / 2);
+		drawGround();
+		dino.draw();
+	</script>
+</body>
+
+</html>
