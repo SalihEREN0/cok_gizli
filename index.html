@@ -76,10 +76,19 @@
 	</div>
 
 	<script>
-		// Gizli konsol mesajı
-		console.log('%c🔍 Gizli Link Bulundu!', 'color: #00ff00; font-size: 20px; font-weight: bold;');
-		console.log('%chttps://secret.yoursite.com', 'color: #00bfff; font-size: 16px;');
-		console.log('%cInspect menüsünde "hidden-link" class\'ını ara!', 'color: #ffa500; font-size: 14px;');
+		// Gizli konsol mesajı - ASCII Art ile
+		console.log('%c    🔐 GİZLİ BÖLGE BULUNDU!    ', 'background: #000; color: #00ff00; font-size: 18px; font-weight: bold; padding: 10px; border: 2px solid #00ff00;');
+		console.log('%c', 'font-size: 5px;');
+		console.log('%c██████╗ ██╗███████╗██╗     ██╗', 'color: #00ff00; font-weight: bold;');
+		console.log('%c██╔════╝ ██║╚══███╔╝██║     ██║', 'color: #00ff00; font-weight: bold;');
+		console.log('%c██║  ███╗██║  ███╔╝ ██║     ██║', 'color: #00ff00; font-weight: bold;');
+		console.log('%c██║   ██║██║ ███╔╝  ██║     ██║', 'color: #00ff00; font-weight: bold;');
+		console.log('%c╚██████╔╝██║███████╗███████╗██║', 'color: #00ff00; font-weight: bold;');
+		console.log('%c ╚═════╝ ╚═╝╚══════╝╚══════╝╚═╝', 'color: #00ff00; font-weight: bold;');
+		console.log('%c', 'font-size: 5px;');
+		console.log('%c➜ Link: ' + window.location.origin + window.location.pathname.replace('index.html', '') + 'secret.html?key=X7K9-2PQR-8MLN', 'color: #00bfff; font-size: 16px; font-weight: bold;');
+		console.log('%c➜ Inspect menüsünde "hidden-link" class\'ını ara!', 'color: #ffa500; font-size: 14px;');
+		console.log('%c➜ data-key attribute\'unda erişim kodunu bulabilirsin!', 'color: #ff00ff; font-size: 14px;');
 
 		const canvas = document.getElementById('gameCanvas');
 		const ctx = canvas.getContext('2d');
